@@ -22,14 +22,14 @@
 //  SOFTWARE.
 
 #import "LLHtmlUIWebViewController.h"
-
+#import <WebKit/WebKit.h>
 #import "LLTool.h"
 
-@interface LLHtmlUIWebViewController () <UIWebViewDelegate>
+@interface LLHtmlUIWebViewController () <WKNavigationDelegate>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-@property (nonatomic, strong) UIWebView *webView;
+@property (nonatomic, strong) WKWebView *webView;
 #pragma clang diagnostic pop
 
 @end
@@ -46,35 +46,37 @@
     self.webView.frame = self.view.bounds;
 }
 
-#pragma mark - UIWebViewDelegate
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-implementations"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-- (void)webViewDidStartLoad:(UIWebView *)webView {
-    [LLTool log:[NSString stringWithFormat:@"UIWebView start load %@",self.urlString]];
+#pragma mark - WKNavigationDelegate
+
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
+    [LLTool log:[NSString stringWithFormat:@"WKWebView start load %@", self.urlString]];
 }
 
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
-    [LLTool log:[NSString stringWithFormat:@"UIWebView finish load %@",self.urlString]];
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    [LLTool log:[NSString stringWithFormat:@"WKWebView finish load %@", self.urlString]];
 }
 
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
-    [LLTool log:[NSString stringWithFormat:@"UIWebView failed in %@, with error %@", self.urlString, error.debugDescription]];
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+    [LLTool log:[NSString stringWithFormat:@"WKWebView failed in %@, with error %@", self.urlString, error.debugDescription]];
 }
+
 #pragma clang diagnostic pop
 
 #pragma mark - Primary
 - (void)setUpUI {
-    if (![self webViewClassIsValid]) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        self.webViewClass = NSStringFromClass([UIWebView class]);
-#pragma clang diagnostic pop
-    }
+
     [self.view addSubview:self.webView];
     
-    [self.webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:self.urlString]]];
+    if (self.urlString.length > 0) {
+          NSURL *url = [NSURL URLWithString:self.urlString];
+          if (url) {
+              NSURLRequest *request = [NSURLRequest requestWithURL:url];
+              [self.webView loadRequest:request];
+          }
+      }
 }
 
 - (BOOL)webViewClassIsValid {
@@ -94,10 +96,11 @@
 #pragma mark - Getters and setters
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-- (UIWebView *)webView {
+- (WKWebView *)webView {
     if (!_webView) {
-        _webView = (UIWebView *)[[NSClassFromString(self.webViewClass) alloc] init];
-        _webView.delegate = self;
+        WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+        _webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:config];
+        _webView.navigationDelegate = self;
     }
     return _webView;
 }

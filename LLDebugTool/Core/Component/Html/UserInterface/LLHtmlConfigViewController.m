@@ -82,7 +82,7 @@
     
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    if (cls != [UIWebView class] && cls != [WKWebView class]) {
+    if (cls != [WKWebView class]) {
 #pragma clang diagnostic pop
         if ([LLConfig shared].htmlViewControllerProvider != nil) {
             UIViewController *customViewController = [LLConfig shared].htmlViewControllerProvider(urlString);
@@ -103,12 +103,12 @@
     LLHtmlViewController *vc = nil;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    if (cls == [UIWebView class]) {
+//    if (cls == [UIWebView class]) {
 #pragma clang diagnostic pop
-        vc = [[LLHtmlUIWebViewController alloc] init];
-    } else {
+//        vc = [[LLHtmlUIWebViewController alloc] init];
+//    } else {
         vc = [[LLHtmlWkWebViewController alloc] init];
-    }
+//    }
     vc.webViewClass = self.webViewClass;
     vc.urlString = [self currentUrlString];
     [self.navigationController pushViewController:vc animated:YES];
