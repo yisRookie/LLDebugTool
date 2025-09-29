@@ -86,10 +86,9 @@
     Class cls = NSClassFromString(self.webViewClass);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    if (cls != [UIWebView class]) {
+    
 #pragma clang diagnostic pop
-        return NO;
-    }
+        
     return YES;
 }
 
