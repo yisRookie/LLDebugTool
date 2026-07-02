@@ -37,8 +37,15 @@
 // Whether is special screen.
 #define LL_IS_SPECIAL_SCREEN \
 ({BOOL isPhoneX = NO;\
-if (@available(iOS 11.0, *)) {\
-isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
+if (@available(iOS 13.0, *)) {\
+for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {\
+if (![scene isKindOfClass:UIWindowScene.class]) { continue; }\
+UIWindowScene *windowScene = (UIWindowScene *)scene;\
+for (UIWindow *window in windowScene.windows) {\
+if (window.safeAreaInsets.bottom > 0.0) { isPhoneX = YES; break; }\
+}\
+if (isPhoneX) { break; }\
+}\
 }\
 (isPhoneX);})
 // Layout length by horizontal direction in 414px.

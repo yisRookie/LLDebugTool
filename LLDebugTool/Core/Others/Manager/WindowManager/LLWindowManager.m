@@ -274,12 +274,37 @@ static LLWindowManager *_instance = nil;
     Class cls = NSClassFromString(className);
     NSAssert(cls, ([NSString stringWithFormat:@"%@ can't register a class.",className]));
     __block LLBaseWindow *window = nil;
-    if (![[NSThread currentThread] isMainThread]) {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-           window = [[cls alloc] initWithFrame:[UIScreen mainScreen].bounds];
-        });
-    } else {
+    void (^createWindow)(void) = ^{
         window = [[cls alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        if (@available(iOS 13.0, *)) {
+            UIWindowScene *activeScene = nil;
+            UIWindowScene *fallbackScene = nil;
+            for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+                if (![scene isKindOfClass:UIWindowScene.class]) {
+                    continue;
+                }
+                UIWindowScene *windowScene = (UIWindowScene *)scene;
+                if (windowScene.activationState == UISceneActivationStateForegroundActive) {
+                    activeScene = windowScene;
+                    break;
+                }
+                if (fallbackScene == nil && windowScene.activationState == UISceneActivationStateForegroundInactive) {
+                    fallbackScene = windowScene;
+                }
+                if (fallbackScene == nil) {
+                    fallbackScene = windowScene;
+                }
+            }
+            UIWindowScene *windowScene = activeScene ?: fallbackScene;
+            if (windowScene) {
+                window.windowScene = windowScene;
+            }
+        }
+    };
+    if (![[NSThread currentThread] isMainThread]) {
+        dispatch_sync(dispatch_get_main_queue(), createWindow);
+    } else {
+        createWindow();
     }
     NSAssert([window isKindOfClass:[LLBaseWindow class]], ([NSString stringWithFormat:@"%@ isn't a LLBaseWindow class",className]));
     return window;
