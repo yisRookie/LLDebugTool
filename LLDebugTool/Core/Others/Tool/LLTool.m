@@ -61,7 +61,7 @@ static pthread_mutex_t mutex_t = PTHREAD_MUTEX_INITIALIZER;
 }
 
 + (CGRect)rectWithPoint:(CGPoint)point otherPoint:(CGPoint)otherPoint {
-    
+
     CGFloat x = MIN(point.x, otherPoint.x);
     CGFloat y = MIN(point.y, otherPoint.y);
     CGFloat maxX = MAX(point.x, otherPoint.x);
@@ -84,19 +84,135 @@ static pthread_mutex_t mutex_t = PTHREAD_MUTEX_INITIALIZER;
 }
 
 + (UIWindow *)topWindow {
-    UIWindow *topWindow = [UIApplication sharedApplication].delegate.window;
-    for (UIWindow *win in [UIApplication sharedApplication].windows) {
-        if (!win.isHidden && win.windowLevel > topWindow.windowLevel) {
+    UIWindow *topWindow = nil;
+    for (UIWindow *win in [self applicationWindows]) {
+        if (!win.isHidden && win.alpha > 0 && (topWindow == nil || win.windowLevel > topWindow.windowLevel)) {
             topWindow = win;
         }
     }
-    return topWindow;
+    return topWindow ?: [self keyWindow];
 }
 
 + (UIWindow *)keyWindow {
+    for (UIWindow *window in [self applicationWindows]) {
+        if (window.isKeyWindow) {
+            return window;
+        }
+    }
+    for (UIWindow *window in [self applicationWindows]) {
+        if (!window.isHidden && window.alpha > 0) {
+            return window;
+        }
+    }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     return [UIApplication sharedApplication].keyWindow;
+#pragma clang diagnostic pop
+}
+
+#ifdef __IPHONE_13_0
++ (UIWindowScene *)currentWindowScene {
+    if (![[NSThread currentThread] isMainThread]) {
+        __block UIWindowScene *windowScene = nil;
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            windowScene = [self currentWindowScene];
+        });
+        return windowScene;
+    }
+
+    if (@available(iOS 13.0, *)) {
+        UIWindowScene *activeScene = nil;
+        UIWindowScene *inactiveScene = nil;
+        UIWindowScene *fallbackScene = nil;
+        for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+            if (![scene isKindOfClass:UIWindowScene.class]) {
+                continue;
+            }
+            UIWindowScene *windowScene = (UIWindowScene *)scene;
+            for (UIWindow *window in windowScene.windows) {
+                if (window.isKeyWindow) {
+                    return windowScene;
+                }
+            }
+            if (activeScene == nil && windowScene.activationState == UISceneActivationStateForegroundActive) {
+                activeScene = windowScene;
+            }
+            if (inactiveScene == nil && windowScene.activationState == UISceneActivationStateForegroundInactive) {
+                inactiveScene = windowScene;
+            }
+            if (fallbackScene == nil) {
+                fallbackScene = windowScene;
+            }
+        }
+        return activeScene ?: inactiveScene ?: fallbackScene;
+    }
+    return nil;
+}
+#endif
+
++ (NSArray<UIWindow *> *)applicationWindows {
+    if (![[NSThread currentThread] isMainThread]) {
+        __block NSArray<UIWindow *> *windows = nil;
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            windows = [self applicationWindows];
+        });
+        return windows ?: @[];
+    }
+
+#ifdef __IPHONE_13_0
+    if (@available(iOS 13.0, *)) {
+        UIWindowScene *windowScene = [self currentWindowScene];
+        if (windowScene) {
+            return windowScene.windows ?: @[];
+        }
+    }
+#endif
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return [UIApplication sharedApplication].windows ?: @[];
+#pragma clang diagnostic pop
+}
+
++ (UIInterfaceOrientation)interfaceOrientation {
+#ifdef __IPHONE_13_0
+    if (@available(iOS 13.0, *)) {
+        UIWindowScene *windowScene = [self currentWindowScene];
+        if (windowScene) {
+            return windowScene.interfaceOrientation;
+        }
+    }
+#endif
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return [UIApplication sharedApplication].statusBarOrientation;
+#pragma clang diagnostic pop
+}
+
++ (UIStatusBarStyle)statusBarStyle {
+#ifdef __IPHONE_13_0
+    if (@available(iOS 13.0, *)) {
+        return UIStatusBarStyleDefault;
+    }
+#endif
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return [UIApplication sharedApplication].statusBarStyle;
+#pragma clang diagnostic pop
+}
+
++ (void)setStatusBarStyle:(UIStatusBarStyle)statusBarStyle animated:(BOOL)animated {
+#ifdef __IPHONE_13_0
+    if (@available(iOS 13.0, *)) {
+        return;
+    }
+#endif
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    [[UIApplication sharedApplication] setStatusBarStyle:statusBarStyle animated:animated];
 #pragma clang diagnostic pop
 }
 
@@ -137,7 +253,7 @@ static bool _statusBarClickable = YES;
 #ifdef __IPHONE_13_0
     if (@available(iOS 13.0, *)) {
         // We can still get statusBar using the following code, but this is not recommended.
-        UIStatusBarManager *statusBarManager = [UIApplication sharedApplication].delegate.window.windowScene.statusBarManager;
+        UIStatusBarManager *statusBarManager = [self currentWindowScene].statusBarManager;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wundeclared-selector"
         if ([statusBarManager respondsToSelector:@selector(createLocalStatusBar)]) {

@@ -46,6 +46,8 @@ if (window.safeAreaInsets.bottom > 0.0) { isPhoneX = YES; break; }\
 }\
 if (isPhoneX) { break; }\
 }\
+} else if (@available(iOS 11.0, *)) {\
+isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
 }\
 (isPhoneX);})
 // Layout length by horizontal direction in 414px.

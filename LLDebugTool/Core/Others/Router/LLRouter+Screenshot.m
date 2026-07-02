@@ -31,14 +31,11 @@
 + (nullable UIImage *)screenshotWithScale:(CGFloat)scale
 {
     CGSize imageSize = CGSizeMake(LL_SCREEN_WIDTH, LL_SCREEN_HEIGHT);;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
-#pragma clang diagnostic pop
+    UIInterfaceOrientation orientation = [LLTool interfaceOrientation];
     UIGraphicsBeginImageContextWithOptions(imageSize, NO, scale);
     CGContextRef context = UIGraphicsGetCurrentContext();
     
-    NSMutableArray *windows = [[NSMutableArray alloc] initWithArray:[[UIApplication sharedApplication] windows]];
+    NSMutableArray *windows = [[NSMutableArray alloc] initWithArray:[LLTool applicationWindows]];
     UIView *statusBar = [LLTool getUIStatusBarModern];
     if ([statusBar isKindOfClass:[UIView class]]) {
         [windows addObject:statusBar];

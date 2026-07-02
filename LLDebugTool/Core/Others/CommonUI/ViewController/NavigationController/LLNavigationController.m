@@ -25,6 +25,7 @@
 
 #import "LLBaseViewController.h"
 #import "LLThemeManager.h"
+#import "LLTool.h"
 
 @interface LLNavigationController ()
 
@@ -102,10 +103,7 @@
 
 - (void)updateStatusBarTheme {
     [self setNeedsStatusBarAppearanceUpdate];
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [[UIApplication sharedApplication] setStatusBarStyle:[LLThemeManager shared].statusBarStyle animated:NO];
-#pragma clang diagnostic pop
+    [LLTool setStatusBarStyle:[LLThemeManager shared].statusBarStyle animated:NO];
 }
 
 @end

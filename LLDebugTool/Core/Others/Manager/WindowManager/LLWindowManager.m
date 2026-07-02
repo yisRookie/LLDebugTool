@@ -27,6 +27,7 @@
 #import "LLThemeManager.h"
 #import "LLConfig.h"
 #import "LLConst.h"
+#import "LLTool.h"
 
 #import "UIView+LL_Utils.h"
 
@@ -129,15 +130,16 @@ static LLWindowManager *_instance = nil;
         if (self.keyWindow) {
             [self.keyWindow makeKeyWindow];
             self.keyWindow = nil;
-            [[UIApplication sharedApplication] setStatusBarStyle:self.statusBarStyle];
+            [LLTool setStatusBarStyle:self.statusBarStyle animated:NO];
         }
         window.hidden = NO;
         window.windowLevel = self.entryWindowLevel;
     } else {
-        if (![[UIApplication sharedApplication].keyWindow isKindOfClass:[LLBaseWindow class]]) {
-            self.keyWindow = [UIApplication sharedApplication].keyWindow;
-            self.statusBarStyle = [UIApplication sharedApplication].statusBarStyle;
-            [[UIApplication sharedApplication] setStatusBarStyle:[LLThemeManager shared].statusBarStyle animated:animated];
+        UIWindow *keyWindow = [LLTool keyWindow];
+        if (![keyWindow isKindOfClass:[LLBaseWindow class]]) {
+            self.keyWindow = keyWindow;
+            self.statusBarStyle = [LLTool statusBarStyle];
+            [LLTool setStatusBarStyle:[LLThemeManager shared].statusBarStyle animated:animated];
         }
         [window makeKeyAndVisible];
         window.windowLevel = self.presentWindowLevel;
@@ -276,30 +278,14 @@ static LLWindowManager *_instance = nil;
     __block LLBaseWindow *window = nil;
     void (^createWindow)(void) = ^{
         window = [[cls alloc] initWithFrame:[UIScreen mainScreen].bounds];
+#ifdef __IPHONE_13_0
         if (@available(iOS 13.0, *)) {
-            UIWindowScene *activeScene = nil;
-            UIWindowScene *fallbackScene = nil;
-            for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
-                if (![scene isKindOfClass:UIWindowScene.class]) {
-                    continue;
-                }
-                UIWindowScene *windowScene = (UIWindowScene *)scene;
-                if (windowScene.activationState == UISceneActivationStateForegroundActive) {
-                    activeScene = windowScene;
-                    break;
-                }
-                if (fallbackScene == nil && windowScene.activationState == UISceneActivationStateForegroundInactive) {
-                    fallbackScene = windowScene;
-                }
-                if (fallbackScene == nil) {
-                    fallbackScene = windowScene;
-                }
-            }
-            UIWindowScene *windowScene = activeScene ?: fallbackScene;
+            UIWindowScene *windowScene = [LLTool currentWindowScene];
             if (windowScene) {
                 window.windowScene = windowScene;
             }
         }
+#endif
     };
     if (![[NSThread currentThread] isMainThread]) {
         dispatch_sync(dispatch_get_main_queue(), createWindow);

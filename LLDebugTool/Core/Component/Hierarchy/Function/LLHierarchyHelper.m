@@ -25,6 +25,8 @@
 
 #import <UIKit/UIKit.h>
 
+#import "LLTool.h"
+
 static LLHierarchyHelper *_instance = nil;
 
 @implementation LLHierarchyHelper
@@ -42,22 +44,7 @@ static LLHierarchyHelper *_instance = nil;
 }
 
 - (NSArray <UIWindow *>*)allWindowsIgnoreClass:(Class)cls {
-    BOOL includeInternalWindows = YES;
-    BOOL onlyVisibleWindows = NO;
-    
-    SEL allWindowsSelector = NSSelectorFromString(@"allWindowsIncludingInternalWindows:onlyVisibleWindows:");
-    
-    NSMethodSignature *methodSignature = [[UIWindow class] methodSignatureForSelector:allWindowsSelector];
-    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:methodSignature];
-    
-    invocation.target = [UIWindow class];
-    invocation.selector = allWindowsSelector;
-    [invocation setArgument:&includeInternalWindows atIndex:2];
-    [invocation setArgument:&onlyVisibleWindows atIndex:3];
-    [invocation invoke];
-    
-    __unsafe_unretained NSArray<UIWindow *> *windows = nil;
-    [invocation getReturnValue:&windows];
+    NSArray<UIWindow *> *windows = [LLTool applicationWindows];
     
     windows = [windows sortedArrayUsingComparator:^NSComparisonResult(UIWindow * obj1, UIWindow * obj2) {
         return obj1.windowLevel > obj2.windowLevel;

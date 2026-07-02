@@ -55,12 +55,39 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return Top level window.
  */
-+ (UIWindow *)topWindow;
++ (UIWindow *_Nullable)topWindow;
 
 /**
  Key window.
+*/
++ (UIWindow *_Nullable)keyWindow;
+
+#ifdef __IPHONE_13_0
+/**
+ Current active window scene.
  */
-+ (UIWindow *)keyWindow;
++ (UIWindowScene *_Nullable)currentWindowScene API_AVAILABLE(ios(13.0));
+#endif
+
+/**
+ Windows in current application scene.
+ */
++ (NSArray <UIWindow *>*)applicationWindows;
+
+/**
+ Interface orientation in current application scene.
+ */
++ (UIInterfaceOrientation)interfaceOrientation;
+
+/**
+ Current status bar style.
+ */
++ (UIStatusBarStyle)statusBarStyle;
+
+/**
+ Set current status bar style.
+ */
++ (void)setStatusBarStyle:(UIStatusBarStyle)statusBarStyle animated:(BOOL)animated;
 
 /**
  Internal log.

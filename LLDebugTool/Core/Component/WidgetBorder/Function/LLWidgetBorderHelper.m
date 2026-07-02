@@ -25,6 +25,8 @@
 
 #import <UIKit/UIKit.h>
 
+#import "LLTool.h"
+
 #import "UIView+LLWidgetBorder.h"
 
 static LLWidgetBorderHelper *_instance = nil;
@@ -41,7 +43,7 @@ static LLWidgetBorderHelper *_instance = nil;
 
 - (void)setEnable:(BOOL)enable {
     _enable = enable;
-    for (UIWindow *window in [UIApplication sharedApplication].windows) {
+    for (UIWindow *window in [LLTool applicationWindows]) {
         [window LL_updateBorderLayer:enable];
     }
 }
