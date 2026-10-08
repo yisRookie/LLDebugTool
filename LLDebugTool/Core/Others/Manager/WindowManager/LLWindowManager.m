@@ -286,6 +286,10 @@ static LLWindowManager *_instance = nil;
             }
         }
 #endif
+        // Attach debug windows to the application's main scene.
+        if (@available(iOS 13.0, *)) {
+            window.windowScene = [UIApplication sharedApplication].delegate.window.windowScene;
+        }
     };
     if (![[NSThread currentThread] isMainThread]) {
         dispatch_sync(dispatch_get_main_queue(), createWindow);
